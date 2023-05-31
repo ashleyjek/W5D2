@@ -26,18 +26,53 @@ require_relative './sqlzoo.rb'
 def alison_artist
   # Select the name of the artist who recorded the song 'Alison'.
   execute(<<-SQL)
+  SELECT
+    artist
+  FROM
+    albums
+  WHERE
+    asin IN (
+    SELECT
+      album
+    FROM
+      tracks
+    WHERE
+      song = 'Alison'
+    );
+
   SQL
 end
 
 def exodus_artist
   # Select the name of the artist who recorded the song 'Exodus'.
   execute(<<-SQL)
+   SELECT
+    artist
+  FROM
+    albums
+  WHERE
+    asin IN (
+    SELECT
+      album
+    FROM
+      tracks
+    WHERE
+      song = 'Exodus'
+    );
   SQL
 end
 
 def blur_songs
   # Select the `song` for each `track` on the album `Blur`.
   execute(<<-SQL)
+  SELECT
+    song
+  FROM
+    tracks
+  JOIN albums
+    ON albums.asin = tracks.album
+  WHERE
+    albums.title = 'Blur';
   SQL
 end
 
@@ -46,6 +81,23 @@ def heart_tracks
   # word 'Heart' (albums with no such tracks need not be shown). Order first by
   # the number of such tracks, then by album title.
   execute(<<-SQL)
+  SELECT
+    title, COUNT(*)
+  FROM
+    albums
+  JOIN (
+  SELECT
+    album
+  FROM
+    tracks
+  WHERE
+    song LIKE '%Heart%'  
+  ) AS heart_songs
+    ON albums.asin = heart_songs.album
+  GROUP BY
+    title
+  ORDER BY
+    COUNT(*) DESC, title;
   SQL
 end
 
@@ -53,6 +105,14 @@ def title_tracks
   # A 'title track' has a `song` that is the same as its album's `title`. Select
   # the names of all the title tracks.
   execute(<<-SQL)
+  SELECT
+    song
+  FROM
+    tracks
+  JOIN albums
+    ON tracks.album = albums.asin
+  WHERE
+    song = title;
   SQL
 end
 
@@ -60,6 +120,12 @@ def eponymous_albums
   # An 'eponymous album' has a `title` that is the same as its recording
   # artist's name. Select the titles of all the eponymous albums.
   execute(<<-SQL)
+  SELECT
+    title
+  FROM
+    albums
+  WHERE
+    artist = title;
   SQL
 end
 
@@ -67,6 +133,16 @@ def song_title_counts
   # Select the song names that appear on more than two albums. Also select the
   # COUNT of times they show up.
   execute(<<-SQL)
+  SELECT
+    song, COUNT(title)
+  FROM
+    tracks
+  JOIN albums
+    ON tracks.album = albums.asin
+  GROUP BY
+    song
+  HAVING
+    COUNT(title) >2;
   SQL
 end
 
